@@ -1,6 +1,6 @@
 # Required Markdown report template
 
-Save the completed report as `WORDPRESS_PLUGIN_REVIEW.md` (or user-requested `.md` path). Remove conditional sections not applicable. Use exact paths/line numbers from the **current** inspected plugin, never historical sample paths as if current.
+Save the completed report as `WORDPRESS_PLUGIN_REVIEW.md` using the output-location rule in `SKILL.md`, step 5 (existing `docs/`, otherwise the reviewed root; an explicit user path takes precedence). Remove conditional sections not applicable. Use exact paths/line numbers from the **current** inspected plugin, never historical sample paths as if current.
 
 ````markdown
 # WordPress.org Plugin Compliance Review — [Plugin name]

@@ -1,97 +1,57 @@
 # WordPress.org Plugin Review
 
-A portable agent skill for reviewing WordPress plugins before submission, updates, reopening, or resubmission. It combines applicable WordPress.org rules with historical Plugins Team review cases and produces an evidence-backed Markdown report.
+An agent skill that reviews WordPress plugins for WordPress.org submission and updates. It creates a Markdown report with findings, suggested fixes, and checks to run before submission.
 
-The review is read-only. The agent inspects plugin code and release artifacts, traces findings to reachable behavior, and recommends fixes without modifying the plugin.
+Reviews are read-only: the skill inspects your plugin and recommends changes without modifying its code.
 
-## What it reviews
-
-- **Free/Pro boundaries:** locally implemented features restricted by licenses, trials, quotas, support guards, or renderer limits; distinguish separate add-ons and genuine external services.
-- **Privacy and external services:** PHP/browser requests, telemetry consent, transmitted data, remote assets, readme disclosures, and applicable terms/privacy links.
-- **Security:** REST, Abilities and AJAX permissions, object-specific capabilities, guest-order access, nonce logic, nested input validation, returned block markup, filtered HTML, and arbitrary code insertion.
-- **Feature claims:** compare readme, FAQ, screenshots, and compiled marketing copy with working free-plugin behavior.
-- **Runtime and packaging:** activation issues, private document exposure, output buffers, database setup, plugin paths, naming, translations, dependencies, and shipped assets.
-
-SVN administration, tagging, commit frequency, version-bump requirements, release correspondence, and reviewer etiquette are outside this skill's scope. Block Directory restrictions apply only to actual Block Directory submissions.
-
-## Install
-
-Clone this repository:
+## Install with npx skills
 
 ```bash
-git clone https://github.com/SaminYaser-work/wordpress-plugin-review.git
+npx skills add SaminYaser-work/wordpress-plugin-review --skill wordpress-plugin-review
 ```
 
-Place the complete `wordpress-plugin-review` folder in your agent's supported skills directory. Keep `SKILL.md`, `references/`, and `scripts/` together so relative paths resolve. Follow your agent's instructions for discovering or loading skills.
+Follow the prompts to choose which coding agents should use the skill. Installation applies to the current project by default.
 
-The optional scanner requires Python 3.10 or newer and uses only the standard library. A full review also requires an agent with access to the plugin files. Internet access allows current policy verification; an isolated WordPress environment allows runtime checks.
+To make the skill available across projects, install it globally:
 
-## Ask an agent to review a plugin
+```bash
+npx skills add SaminYaser-work/wordpress-plugin-review --skill wordpress-plugin-review -g
+```
+
+See the [official Skills installation guide](https://github.com/vercel-labs/skills#install-a-skill) for more options.
+
+## Use the skill
+
+Ask your agent:
 
 ```text
-Use wordpress-plugin-review to review /path/to/plugin.zip for WordPress.org
-compliance and write WORDPRESS_PLUGIN_REVIEW.md.
+Use wordpress-plugin-review to review /path/to/my-plugin for WordPress.org compliance.
 ```
 
-A plugin directory also works. Supply the distribution ZIP when possible, since reviewers inspect what ships. You can provide a separate source tree and the WordPress.org slug as additional context.
+You can also provide a plugin ZIP:
 
-The completed report includes:
-
-- Exact artifact, scope, date, and tooling/runtime coverage.
-- Stable finding IDs with severity, confidence, current file/line evidence, reachable behavior, applicable policy, suggested fixes, and retests.
-- External-service and free-feature claim inventories when applicable.
-- Unverified concerns, checks that could not run, and prioritized remediation.
-
-See the [report template](references/report-template.md) and [hypothetical example report](examples/EXAMPLE_REPORT.md).
-
-## Run the standalone triage scanner
-
-From this repository's root, scan a ZIP:
-
-```bash
-python3 scripts/scan_plugin.py /path/to/plugin.zip \
-  --slug your-plugin-slug \
-  --out WORDPRESS_PLUGIN_REVIEW.md \
-  --json review-inventory.json
+```text
+Use wordpress-plugin-review to review /path/to/my-plugin.zip for WordPress.org compliance.
 ```
 
-Or scan a directory:
+Use the ZIP you plan to submit when available, so the review covers what will ship.
 
-```bash
-python3 scripts/scan_plugin.py /path/to/plugin-directory \
-  --out WORDPRESS_PLUGIN_REVIEW.md
-```
+## What it checks
 
-The scanner reads files without extracting or executing plugin code. Its output is a candidate checklist, not a completed compliance audit. An agent or reviewer must inspect surrounding code, registration paths, consent, service disclosures, feature reachability, and relevant runtime behavior. The scanner cannot establish those facts from regex matches.
+- WordPress.org requirements relevant to your plugin.
+- Security, privacy, and external services.
+- Free and paid feature boundaries.
+- Whether advertised features match the plugin's behavior.
+- Common plugin errors and packaging issues.
 
-## Evidence and limitations
+SVN and release administration are outside the review's scope.
 
-Official policy takes precedence over historical email examples. A public endpoint, Pro UI, remote URL, PHPCS suppression, or generated stylesheet is not automatically a violation. Each finding needs evidence from the plugin currently under review.
+## Your report
 
-The skill does not guarantee WordPress.org approval. Tooling and runtime checks must be reported accurately; unavailable checks remain explicitly untested. Do not execute an untrusted plugin on the host to perform a review.
+The skill creates `WORDPRESS_PLUGIN_REVIEW.md` in the reviewed plugin/project's existing `docs/` folder. If no `docs/` folder exists, it saves the report in that project's root. You can request a different output path.
 
-## Included guidance
+For ZIP-only reviews, the ZIP's parent folder is the root. If you also provide the corresponding source folder, the skill uses that source root instead.
 
-| File | Purpose |
-|---|---|
-| [SKILL.md](SKILL.md) | Agent workflow, scope, evidence requirements, and deliverables |
-| [Rulebook](references/rulebook.md) | Applicability gates and detailed review checks |
-| [Reviewer cases](references/reviewer-cases.md) | Historical Plugins Team examples with source provenance |
-| [Report template](references/report-template.md) | Required Markdown report structure |
-| [Validation guide](references/validation.md) | Official references, commands, and runtime retests |
-| [Scanner](scripts/scan_plugin.py) | Read-only ZIP/directory triage with Markdown and optional JSON output |
-| [Tests](tests/test_scan_plugin.py) | Scanner regression checks |
+The report explains each finding, its priority, suggested fixes, and how to verify them. It also notes checks that could not be completed. See the [example report](examples/EXAMPLE_REPORT.md).
 
-## Validation
-
-Run the scanner tests:
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-## Policy and reviewer-source dates
-
-The initial official-source review was completed on 2026-10-11. On 2026-10-27, the [Detailed Plugin Guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/), [Common Issues](https://developer.wordpress.org/plugins/wordpress-org/common-issues/), [escaping guidance](https://developer.wordpress.org/apis/security/escaping/), and [Abilities registration documentation](https://developer.wordpress.org/reference/functions/wp_register_ability/) were rechecked. Recheck applicable policy during each new audit.
-
-The case bank incorporates reviewer-only examples from the supplied historical document and three follow-up emails dated 2026-10-26 for PostX, WowStore, and WowOptin. These add checks for arbitrary code insertion, guest-order authorization, public analytics integrity, block/filter output, multi-step feature restrictions, and global action prefixes. Sources and review IDs appear in the [case bank](references/reviewer-cases.md); historical file locations are not findings about current plugin versions.
+A review does not guarantee WordPress.org approval.

@@ -58,7 +58,7 @@ Read `references/rulebook.md` for investigation questions, expected findings and
 
 ### 5. Create the final Markdown report (required)
 
-Use `references/report-template.md`. Write `WORDPRESS_PLUGIN_REVIEW.md` to the current user-accessible output folder (or explicit path). The report must include:
+Use `references/report-template.md`. Unless the user specifies an explicit output path, write the final report to `docs/WORDPRESS_PLUGIN_REVIEW.md` if a `docs/` directory already exists in the reviewed plugin/project root; otherwise write `WORDPRESS_PLUGIN_REVIEW.md` directly in that root. For ZIP-only reviews, use the ZIP parent directory as the root; when a corresponding source tree is supplied, use its root. The report must include:
 
 1. Plugin identity, exact source/ZIP reviewed, review date, scope and tool/runtime coverage.
 2. Executive verdict **based on evidence**, counts by severity, blockers, and caveats. Do not promise WordPress.org approval.
