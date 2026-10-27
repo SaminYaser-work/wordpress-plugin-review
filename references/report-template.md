@@ -78,6 +78,8 @@ Short evidence excerpt if needed:
 |---|---|---|---|
 | PCP | `wp plugin check <slug> --format=json` | Pass / Fail / Not run | [output or location] |
 | PHPCS/WPCS | [actual command] | Pass / Fail / Not run | [...] |
+| Direct CSS/JS output | trace template/printed style and script tags, including suppressed code | Pass / Fail / Not run | [locations, reachability and asset-loading findings] |
+| Late output escaping | trace dynamic output at final sinks, including suppressed code | Pass / Fail / Not run | [output contexts, upstream-only escaping and findings] |
 | PHP lint | [actual command] | Pass / Fail / Not run | [...] |
 | Activation | clean WP + WP_DEBUG=true | Pass / Fail / Not run | [...] |
 | Network/consent | no-consent and user-consent paths | Pass / Fail / Not run | [...] |

@@ -33,6 +33,8 @@ find /path/to/plugin -name '*.php' -type f -print0 | xargs -0 -n1 php -l
 
 Warnings: Plugin Check is complementary to manual review, and its defaults/CLI options may vary by version. Running PCP and PHPCS does **not** prove that WordPress.org will accept the plugin. WPCS sniffs cover static patterns but not full consent, privacy, feature reachability or business rules. Do not execute code from an unknown plugin on the host just to run tools. Prefer isolated environment.
 
+Always perform the rulebook's **Direct CSS/JS output and late escaping** checks manually, including suppressed and excluded code. The bundled scanner is lexical triage and can miss multiline, interpolated or helper-generated output. Record separate results for direct style/script output and dynamic-output escaping; a clean PHPCS run does not satisfy these checks.
+
 ## Runtime verification checklist
 
 1. Isolate a fresh WordPress test install; set `WP_DEBUG` and `WP_DEBUG_LOG` true; capture PHP notices, activation output, DB changes, and unexpected network calls.

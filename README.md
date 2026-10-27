@@ -40,6 +40,7 @@ Use the ZIP you plan to submit when available, so the review covers what will sh
 
 - WordPress.org requirements relevant to your plugin.
 - Security, privacy, and external services.
+- Directly printed CSS/JS tags and dynamic output without context-appropriate late escaping, regardless of PHPCS suppressions.
 - Free and paid feature boundaries.
 - Whether advertised features match the plugin's behavior.
 - Common plugin errors and packaging issues.
