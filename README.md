@@ -2,7 +2,7 @@
 
 An agent skill that reviews WordPress plugins for WordPress.org submission and updates. It creates a Markdown report with findings, suggested fixes, and checks to run before submission.
 
-Reviews are read-only: the skill inspects your plugin and recommends changes without modifying its code.
+Reviews keep plugin code read-only. For runtime checks, the skill enables debug logging in a disposable WordPress test site's `wp-config.php`, then restores the original settings unless you ask to keep them.
 
 ## Install with npx skills
 
@@ -44,6 +44,8 @@ Use the ZIP you plan to submit when available, so the review covers what will sh
 - Free and paid feature boundaries.
 - Whether advertised features match the plugin's behavior.
 - Common plugin errors and packaging issues.
+- New debug-log issues during activation, normal plugin use, and deactivation, with old entries kept separate.
+- Declared PHP support versus functions, syntax, and bundled dependencies, including minimum-version checks when available.
 
 SVN and release administration are outside the review's scope.
 

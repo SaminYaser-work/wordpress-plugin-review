@@ -10,6 +10,10 @@ Save the completed report as `WORDPRESS_PLUGIN_REVIEW.md` using the output-locat
 **Input:** [source path / ZIP + SHA-256 if available]  
 **Release artifact verified:** Yes / No  
 **WordPress/PHP/WooCommerce test versions:** [actual values or Not tested]  
+**Declared PHP support:** [header/readme Requires PHP + locations; Composer/bundled dependency constraints; conflicts or missing declarations]
+
+**Debug setup:** [test-site config path; original and effective debug settings; resolved log path; web logging probe result; settings restored or retained at user request]
+
 **Sources:** [official policies checked on DATE; reviewer-case bank consulted]
 
 ## Executive summary
@@ -80,8 +84,13 @@ Short evidence excerpt if needed:
 | PHPCS/WPCS | [actual command] | Pass / Fail / Not run | [...] |
 | Direct CSS/JS output | trace template/printed style and script tags, including suppressed code | Pass / Fail / Not run | [locations, reachability and asset-loading findings] |
 | Late output escaping | trace dynamic output at final sinks, including suppressed code | Pass / Fail / Not run | [output contexts, upstream-only escaping and findings] |
-| PHP lint | [actual command] | Pass / Fail / Not run | [...] |
-| Activation | clean WP + WP_DEBUG=true | Pass / Fail / Not run | [...] |
+| Declared PHP compatibility | PHPCompatibilityWP with explicit minimum/range + source tracing | Pass / Fail / Not run | [tool/ruleset versions, target range, shipped vendor/template coverage, exclusions, guard/polyfill assessment] |
+| Minimum PHP lint | [actual minimum-version interpreter + command] | Pass / Fail / Not run | [declared minimum, actual interpreter, files checked and gaps] |
+| PHP runtime matrix | minimum PHP and supported modern PHP lifecycle/feature tests | Pass / Fail / Not tested | [actual CLI/web versions, WordPress/dependency versions, per-version outcomes and blocked rows] |
+| Debug logging setup | enable WP_DEBUG/WP_DEBUG_LOG; verify web logging with probe | Pass / Fail / Not tested | [effective flags, actual log path, probe evidence, config restoration] |
+| Activation + log | clean WP activation; read new log entries | Pass / Fail / Not tested | [action/time window, response/output, baseline/delta artifact, attributed findings] |
+| Plugin operations + log | representative frontend/admin/REST/AJAX/cron; read new entries | Pass / Fail / Not tested | [flows exercised, time windows, baseline/delta artifacts, attributed findings] |
+| Deactivation + log | deactivate; read new log entries | Pass / Fail / Not tested | [action/time window, response/output, baseline/delta artifact, attributed findings] |
 | Network/consent | no-consent and user-consent paths | Pass / Fail / Not run | [...] |
 | Permissions | visitor/subscriber/admin REST and AJAX tests | Pass / Fail / Not run | [...] |
 | Feature parity | free/no-license and add-on absent | Pass / Fail / Not run | [...] |
@@ -105,3 +114,5 @@ Short evidence excerpt if needed:
 ````
 
 **Report quality gate:** All finding IDs unique; no contradictory counts; each claimed issue has evidence + policy/technical source + specific fix + test; repeated occurrences not silently discarded; privacy payloads redacted; no guessed runtime assertions; no unrelated policy padding; no SVN workflow observations.
+
+PHP compatibility and all three lifecycle log checks require explicit results or gaps. A newer interpreter's lint result is not minimum-version validation. An absent log or zero-exit capture is not a clean-runtime verdict; verify logging, phase coverage and complete evidence first. Keep historical/unrelated log noise outside plugin finding totals.

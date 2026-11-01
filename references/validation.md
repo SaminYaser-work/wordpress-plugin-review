@@ -13,6 +13,8 @@
 
 **Targeted refresh, 2026-10-27:** rechecked Detailed Plugin Guidelines, Common Issues (including prefixing), Escaping (including safe-return exceptions), and [`wp_register_ability()`](https://developer.wordpress.org/reference/functions/wp_register_ability/). The remaining sources retain the earlier check date. Three reviewer emails dated 2026-10-26 are linked with review IDs in [reviewer-cases.md](reviewer-cases.md); their technical examples supplement current official guidance.
 
+**Debugging/PHP tooling refresh, 2026-11-01:** checked [WordPress debugging](https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/), [PHPCompatibilityWP usage](https://github.com/PHPCompatibility/PHPCompatibilityWP#how-to-use) and [PHPCompatibility testVersion](https://github.com/PHPCompatibility/PHPCompatibility#testversion-in-the-ruleset-versus-command-line). Re-check installed tool capabilities when running an audit.
+
 ## Static analysis (when installed)
 
 Use actual command paths for your environment. Examples for a disposable WP installation with Plugin Check already installed:
@@ -35,9 +37,59 @@ Warnings: Plugin Check is complementary to manual review, and its defaults/CLI o
 
 Always perform the rulebook's **Direct CSS/JS output and late escaping** checks manually, including suppressed and excluded code. The bundled scanner is lexical triage and can miss multiline, interpolated or helper-generated output. Record separate results for direct style/script output and dynamic-output escaping; a clean PHPCS run does not satisfy these checks.
 
+## Declared PHP compatibility (mandatory)
+
+1. Extract `Requires PHP` from the main plugin header and `readme.txt`; record exact locations and disagreements. Inspect root Composer constraints, lockfile/platform settings, and requirements of the dependency versions actually shipped. Composer's simulated `config.platform.php` is not a runtime test. If no unambiguous minimum exists, record the metadata gap and state any provisional test target explicitly.
+2. Run a dedicated compatibility scan against the declared minimum, including shipped `vendor/`, generated PHP, templates and other PHP-bearing extensions. Use an installed, suitable PHPCompatibilityWP ruleset; WPCS and the bundled Python scanner do not replace it. Inspect local exclusions/suppressions and manually account for omitted shipped code. Capture PHPCS/ruleset versions, target range, file coverage and skipped paths. If unavailable, perform targeted source review and report automated coverage as **Not run**; do not silently install dependencies into the reviewed plugin.
+
+```bash
+# Examples: use installed tooling outside the reviewed artifact if necessary.
+phpcs --version
+phpcs -i
+# Exact minimum target catches newer features; 7.4 is an example, not a fixed default.
+phpcs -p /path/to/plugin --standard=PHPCompatibilityWP --extensions=php,inc,phtml --runtime-set testVersion 7.4 --report=full
+# Also check the actually supported range; replace the upper bound with audit scope.
+phpcs -p /path/to/plugin --standard=PHPCompatibilityWP --extensions=php,inc,phtml --runtime-set testVersion 7.4-8.3 --report=full
+```
+
+3. Trace newer functions/classes/constants, changed signatures, removed APIs and newer syntax to reachable code. Check `function_exists()`/version guards and polyfills, including those supplied by the minimum supported WordPress version. Verify the polyfill loads before use in activation, REST, cron, CLI and standalone entry paths where applicable. For example, `str_contains()` is newer than PHP 7.4, but a correctly loaded WordPress polyfill can make its use valid. Unsupported syntax in a parsed file cannot be rescued by a runtime branch in that file. Consult the relevant [PHP migration guides](https://www.php.net/manual/en/appendices.php) for the feature's actual introduction/removal version.
+4. Lint shipped PHP using the **minimum-version interpreter**, then activate, use and deactivate the plugin on that interpreter in an isolated WordPress stack supporting that PHP version. Also exercise a supported modern PHP version for deprecations/removals. Record actual CLI and web/FPM PHP versions separately; host PHP 8 lint does not establish PHP 7.4 support. If the installed WordPress or a required dependency cannot run on the declared minimum, use a compatible test stack or record the blocked matrix row rather than claiming a pass. Never execute an untrusted plugin directly on the host.
+5. Report declaration mismatches, confirmed failures and unresolved static hits distinctly. Each issue needs a file/line, required versus declared version, triggering load/call path, guard/polyfill assessment and retest. A clean scan is limited to the tool's supported checks; unavailable minimum-version lint/runtime stays **Not tested**.
+
+## Debug configuration and per-phase log evidence (mandatory)
+
+Use a disposable/local test installation. Plugin source remains read-only; debug configuration is an explicit test-setup exception. In LocalWP, use its generated Site Shell/runtime for WP-CLI rather than assuming the host shell matches PHP or database settings.
+
+1. Locate the active `wp-config.php` and record original debug settings without copying secrets. Change existing false values or add missing definitions **before WordPress boots**, without duplicate constants:
+
+```php
+define( 'WP_DEBUG', true );
+define( 'WP_DEBUG_LOG', true );
+define( 'WP_DEBUG_DISPLAY', false );
+```
+
+With WP-CLI available in that test environment, `wp config set WP_DEBUG true --raw --type=constant` and `wp config set WP_DEBUG_LOG true --raw --type=constant` can set the first two. Set `WP_DEBUG_DISPLAY` false similarly. Preserve an existing valid custom `WP_DEBUG_LOG` path instead of replacing it. Use booleans, not strings such as `'false'`. Do not blanket-enable every debug option: `SCRIPT_DEBUG` changes asset selection, and `SAVEQUERIES` is unnecessary for this check.
+
+2. Resolve the effective log location: boolean true uses `WP_CONTENT_DIR/debug.log`, which need not be the default `wp-content` path; a string can select a custom file. Verify effective `WP_DEBUG`, PHP `log_errors`/`error_log` and writability in the **web runtime** used for testing. Send one uniquely labeled, nonsecret `error_log()` probe through a controlled request in the disposable environment and verify it reaches that file. An isolated `wp --skip-plugins --skip-themes eval 'error_log("WPR logging probe");'` can additionally verify CLI logging; it does not verify web/FPM logging. Keep probes out of plugin files and issue totals. If logging fails, fix test setup or record **Not tested**. Early startup failures may appear only in PHP/FPM/web-server logs; inspect those too when a request fails without a debug-log entry.
+
+3. Preserve the existing log. Before each phase, record a timestamp and file boundary; after requests and triggered work finish, read **all new entries**, including multiline traces. The optional stdlib helper records file identity, size and a prefix digest without truncating the log:
+
+```bash
+# Run from the skill directory; use a private evidence directory outside webroot.
+python3 scripts/debug_log.py baseline /path/to/debug.log --state /private/review/activation-state.json
+# Activate the plugin through wp-admin (WP-CLI may supplement the browser test).
+python3 scripts/debug_log.py delta /path/to/debug.log --state /private/review/activation-state.json --out /private/review/activation-log.json
+```
+
+Create the evidence directory first. Repeat with fresh state/output files for **normal operations** and **deactivation**, and for each PHP runtime. Exercise representative admin/frontend features, REST/AJAX, cron/background work and dependency/error paths where applicable. Capture action, role, URL/command, time window, response/output, PHP version and log evidence for each phase. Review existing historical entries separately as leads; confirm attribution with a fresh reproduction.
+
+4. Inspect helper JSON locally; its `text` field contains the captured entries. Exit 0 means capture succeeded, not that the plugin passed. `missing` or `unchanged` alone proves neither healthy logging nor exercised code. `removed` or `replaced_or_rewritten` means the boundary was lost: inspect retained/rotated logs and repeat the phase with a fresh baseline. On replacement/rewrite the helper captures the current file from its start, which can include old entries. `truncated: true` means the default 1,000,000-byte evidence cap was reached; increase `--max-bytes` or inspect the rest before claiming full coverage. `delta` does not advance its baseline. Keep state, output and log paths distinct. Capture errors exit 2 and are coverage gaps.
+
+5. Classify new fatals, warnings, notices, deprecations and database errors by source and reachability. A stack trace ending in core/vendor may still originate in the plugin; unrelated theme/plugin noise is not a plugin defect. Correlate fresh log lines with actions and source locations, reproduce suspicious entries and redact credentials, personal data and request payloads before reporting. Store raw artifacts privately; never include them in release packages. Restore original test-site debug settings after review unless the user asks to retain them. Record settings changed/restored and any failed cleanup; never truncate historical logs as cleanup.
+
 ## Runtime verification checklist
 
-1. Isolate a fresh WordPress test install; set `WP_DEBUG` and `WP_DEBUG_LOG` true; capture PHP notices, activation output, DB changes, and unexpected network calls.
+1. Complete the mandatory debug configuration/log procedure above; capture separate activation, operation and deactivation evidence, plus DB changes and unexpected network calls. Complete the PHP compatibility matrix or explicitly record unavailable minimum-version tests.
 2. Before consent or service configuration, activate and inspect admin onboarding/deactivation. Check PHP HTTP requests and browser `fetch`/XHR/image/script requests. Mask payloads.
 3. Inspect REST API routes and AJAX endpoints as visitor, subscriber, editor/shop-manager and admin only where roles apply; probe sensitive GET operations and privileged writes; require the precise capability for each operation.
 4. Disable the Pro add-on and set no license. Trigger every advertised free feature; exercise limits and empty states; compare with readme and screenshots. Confirm legitimate remote SaaS actually processes offsite.
@@ -60,4 +112,4 @@ These are investigation/retest scenarios, not capabilities proven by the bundled
 
 ## Review boundaries
 
-The auditing agent should perform *read-only inspection* unless asked to fix issues. It must not silently modify any plugin files, run remote installers, send actual user analytics, or open private site content on the public internet. For ambiguous cases such as real service SDKs, planned add-ons or rate limits, use a `Needs manual verification` finding with explicit questions rather than a categorical violation.
+The auditing agent should keep plugin files read-only unless asked to fix issues. Enabling and later restoring debugging in a disposable test site's `wp-config.php` is permitted test setup. Do not change a production site's configuration for a review; use an isolated copy. The agent must not silently modify plugin files, run remote installers, send actual user analytics, or open private site content on the public internet. For ambiguous cases such as real service SDKs, planned add-ons or rate limits, use a `Needs manual verification` finding with explicit questions rather than a categorical violation.
