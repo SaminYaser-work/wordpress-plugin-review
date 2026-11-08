@@ -15,6 +15,8 @@
 
 **Debugging/PHP tooling refresh, 2026-11-01:** checked [WordPress debugging](https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/), [PHPCompatibilityWP usage](https://github.com/PHPCompatibility/PHPCompatibilityWP#how-to-use) and [PHPCompatibility testVersion](https://github.com/PHPCompatibility/PHPCompatibility#testversion-in-the-ruleset-versus-command-line). Re-check installed tool capabilities when running an audit.
 
+**Reviewer follow-up refresh, 2026-11-08:** inspected all nine reviewer-message tabs linked in [reviewer-cases.md](reviewer-cases.md), excluding nine reply/draft tabs. Rechecked Detailed Plugin Guidelines, Common Issues, [Header Requirements](https://developer.wordpress.org/plugins/plugin-basics/header-requirements/), [`validate_plugin_requirements()`](https://developer.wordpress.org/reference/functions/validate_plugin_requirements/), [`wp_strip_all_tags()`](https://developer.wordpress.org/reference/functions/wp_strip_all_tags/), [`wp_add_inline_style()`](https://developer.wordpress.org/reference/functions/wp_add_inline_style/) and [`safecss_filter_attr()`](https://developer.wordpress.org/reference/functions/safecss_filter_attr/). Treat email examples as investigation prompts, with current official policy taking precedence.
+
 ## Static analysis (when installed)
 
 Use actual command paths for your environment. Examples for a disposable WP installation with Plugin Check already installed:
@@ -36,6 +38,10 @@ find /path/to/plugin -name '*.php' -type f -print0 | xargs -0 -n1 php -l
 Warnings: Plugin Check is complementary to manual review, and its defaults/CLI options may vary by version. Running PCP and PHPCS does **not** prove that WordPress.org will accept the plugin. WPCS sniffs cover static patterns but not full consent, privacy, feature reachability or business rules. Do not execute code from an unknown plugin on the host just to run tools. Prefer isolated environment.
 
 Always perform the rulebook's **Direct CSS/JS output and late escaping** checks manually, including suppressed and excluded code. The bundled scanner is lexical triage and can miss multiline, interpolated or helper-generated output. Record separate results for direct style/script output and dynamic-output escaping; a clean PHPCS run does not satisfy these checks.
+
+## WordPress/PHP requirements and bootstrap (mandatory)
+
+Record main-header and readme `Requires at least` / `Requires PHP` separately. Trace core API introduction versions and plugin/extension dependencies to the first load/use, including generated/vendor code. Confirm that header requirements and compatible guards protect the bootstrap where applicable; declaration presence alone does not prove this. Use a disposable stack for supported-minimum activation and missing/unsupported-dependency refusal tests, capturing response/output and fresh logs. Record unavailable combinations as **Not tested**. Keep metadata defects separate from observed runtime failures. The PHP procedure below supplies the syntax/function/dependency checks; it does not substitute for WordPress-version requirements.
 
 ## Declared PHP compatibility (mandatory)
 
@@ -100,13 +106,19 @@ Create the evidence directory first. Repeat with fresh state/output files for **
 9. Rebuild scripts and scan output bundles and maps, not just source. Check package ZIP for filename collisions, temporary caches/scripts and available maintained JS/CSS source.
 10. Document tool command, result, WordPress/PHP version and gaps. Exclude SVN repository/tagging/version-number checks by design.
 
-### Targeted retests from the 2026-10-26 follow-ups
+### Targeted reviewer-derived retests
 
 - Exercise raw CSS/JS inputs through save, import and old stored data; verify structured styling still works and no alternate raw-code renderer remains.
 - Test post mutation with/without object capabilities, global settings as editor/admin, and public analytics with invalid/unrelated IDs and valid visitor events.
 - For order-received templates, test guest access with correct/missing/wrong/cross-order keys and logged-in access to another customer's order; inspect every rendered field.
 - Probe nonce/capability combinations and alternate handler branches independently. Test block returns and final filter output with safe formatting and hostile markup, including custom helper allowlists.
 - Check multi-step save/support/render paths with Pro disabled and no license. Trace global AJAX names through PHP and compiled clients; confirm valid prefixed actions still dispatch.
+- With add-ons absent, compare settings choices/mappings and action/filter registrations with included renderers across layouts/types. Verify that an upgrade gate restricts a complete local feature before reporting #5; a genuinely separate implementation remains distinct.
+- Test public/search responses with visitor and relevant low-privilege roles, arbitrary resource types/statuses and guest/missing identity fields. Verify coupon/private-resource protection and notification field minimization while preserving intended public data.
+- Inspect fresh-install remote-font requests, refusal, consent and revocation in PHP and browser paths using interception or fixtures. Verify refusal prevents remote requests and any advertised local fallback works; licensing and legal links alone do not prove consent.
+- Trace CSS from save/import, legacy storage and rendered-content extraction through the final style sink. Probe disallowed properties/URLs and boundary-breaking values safely; test valid typed controls too. `wp_strip_all_tags()` and `wp_add_inline_style()` are not stylesheet validation.
+- Test custom HTML helpers before and after placeholder restoration and downstream filters, including script bodies and media markup. Trace an actual untrusted source before alleging an escaping bypass; preserve valid rich markup.
+- Compare output-buffer levels before/after success, early return and error paths with a pre-existing outer buffer. Verify the plugin closes only its own buffers. Trace core helper includes through earlier loaders on supported WordPress versions; redundant `require_once` is not an observed fatal.
 
 These are investigation/retest scenarios, not capabilities proven by the bundled regex scanner. Record runtime checks as **Not tested** when no suitable WordPress environment exists.
 

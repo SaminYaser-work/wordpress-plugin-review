@@ -42,10 +42,12 @@ Use the ZIP you plan to submit when available, so the review covers what will sh
 - Security, privacy, and external services.
 - Directly printed CSS/JS tags and dynamic output without context-appropriate late escaping, regardless of PHPCS suppressions.
 - Free and paid feature boundaries.
+- Hidden feature restrictions through settings mappings and add-on hooks.
+- Public search data, guest identity fallbacks, and remote-font consent defaults.
 - Whether advertised features match the plugin's behavior.
 - Common plugin errors and packaging issues.
 - New debug-log issues during activation, normal plugin use, and deactivation, with old entries kept separate.
-- Declared PHP support versus functions, syntax, and bundled dependencies, including minimum-version checks when available.
+- Declared WordPress/PHP requirements, safe startup checks, and PHP support versus functions, syntax, and bundled dependencies.
 
 SVN and release administration are outside the review's scope.
 

@@ -12,6 +12,8 @@ Save the completed report as `WORDPRESS_PLUGIN_REVIEW.md` using the output-locat
 **WordPress/PHP/WooCommerce test versions:** [actual values or Not tested]  
 **Declared PHP support:** [header/readme Requires PHP + locations; Composer/bundled dependency constraints; conflicts or missing declarations]
 
+**Declared WordPress support:** [main-header/readme Requires at least + locations; core API requirements; conflicts or missing declarations]
+
 **Debug setup:** [test-site config path; original and effective debug settings; resolved log path; web logging probe result; settings restored or retained at user request]
 
 **Sources:** [official policies checked on DATE; reviewer-case bank consulted]
@@ -84,6 +86,7 @@ Short evidence excerpt if needed:
 | PHPCS/WPCS | [actual command] | Pass / Fail / Not run | [...] |
 | Direct CSS/JS output | trace template/printed style and script tags, including suppressed code | Pass / Fail / Not run | [locations, reachability and asset-loading findings] |
 | Late output escaping | trace dynamic output at final sinks, including suppressed code | Pass / Fail / Not run | [output contexts, upstream-only escaping and findings] |
+| Compatibility metadata/bootstrap | compare main-header/readme WordPress/PHP minima; trace guards before dependent code | Pass / Fail / Not tested | [API/dependency requirements, missing/conflicting headers, supported-minimum and missing-dependency results; distinguish metadata from observed failure] |
 | Declared PHP compatibility | PHPCompatibilityWP with explicit minimum/range + source tracing | Pass / Fail / Not run | [tool/ruleset versions, target range, shipped vendor/template coverage, exclusions, guard/polyfill assessment] |
 | Minimum PHP lint | [actual minimum-version interpreter + command] | Pass / Fail / Not run | [declared minimum, actual interpreter, files checked and gaps] |
 | PHP runtime matrix | minimum PHP and supported modern PHP lifecycle/feature tests | Pass / Fail / Not tested | [actual CLI/web versions, WordPress/dependency versions, per-version outcomes and blocked rows] |
@@ -91,9 +94,13 @@ Short evidence excerpt if needed:
 | Activation + log | clean WP activation; read new log entries | Pass / Fail / Not tested | [action/time window, response/output, baseline/delta artifact, attributed findings] |
 | Plugin operations + log | representative frontend/admin/REST/AJAX/cron; read new entries | Pass / Fail / Not tested | [flows exercised, time windows, baseline/delta artifacts, attributed findings] |
 | Deactivation + log | deactivate; read new log entries | Pass / Fail / Not tested | [action/time window, response/output, baseline/delta artifact, attributed findings] |
-| Network/consent | no-consent and user-consent paths | Pass / Fail / Not run | [...] |
+| Network/consent | no-consent, consent and revocation paths; remote fonts when present | Pass / Fail / Not run | [fresh-install defaults, PHP/browser requests, local fallback and applicable service context] |
 | Permissions | visitor/subscriber/admin REST and AJAX tests | Pass / Fail / Not run | [...] |
-| Feature parity | free/no-license and add-on absent | Pass / Fail / Not run | [...] |
+| Public/search response scope | test caller-selected resource types and public field/identity fallbacks, when present | Pass / Fail / Not run | [roles, guest/empty values, sensitive types and intended public data] |
+| Feature parity | free/no-license and add-on absent; settings mappings and hook-based gates | Pass / Fail / Not run | [included implementation, registration/dispatch path, tested layouts/types and genuinely separate functionality] |
+| CSS trust boundaries | raw save/import/extraction/legacy paths versus structured generated styles, when present | Pass / Fail / Not run | [validation and output context; separate arbitrary insertion, asset loading and proven injection] |
+| HTML helper reconstruction | trace filtering, restored placeholders/bodies and later filter results, when present | Pass / Fail / Not run | [trusted/untrusted inputs, safe-markup contract and final sinks] |
+| Buffer/core-helper ownership | trace buffers on success/error and transitive helper loads, when present | Pass / Fail / Not run | [buffer-level evidence, supported WordPress load graph, redundancy versus actual failure] |
 | Public files | direct HTTP request for cached documents | Pass / Fail / Not run | [...] |
 
 ## Manual review / uncertainties
@@ -115,4 +122,4 @@ Short evidence excerpt if needed:
 
 **Report quality gate:** All finding IDs unique; no contradictory counts; each claimed issue has evidence + policy/technical source + specific fix + test; repeated occurrences not silently discarded; privacy payloads redacted; no guessed runtime assertions; no unrelated policy padding; no SVN workflow observations.
 
-PHP compatibility and all three lifecycle log checks require explicit results or gaps. A newer interpreter's lint result is not minimum-version validation. An absent log or zero-exit capture is not a clean-runtime verdict; verify logging, phase coverage and complete evidence first. Keep historical/unrelated log noise outside plugin finding totals.
+WordPress/PHP requirement checks, PHP compatibility and all three lifecycle log checks require explicit results or gaps. Remove nonapplicable conditional rows or mark them N/A outside finding totals. A newer interpreter's lint result is not minimum-version validation. An absent log or zero-exit capture is not a clean-runtime verdict; verify logging, phase coverage and complete evidence first. Keep historical/unrelated log noise outside plugin finding totals.
